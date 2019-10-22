@@ -51,3 +51,11 @@ and fakes Redis behavior as needed.
 # Roadmap
 
 Nothing at the moment. It's possible to create Components for Carmine's various exentions (message queue, Tundra) but they're not needed at the moment.
+
+# Authors
+
+<sup>In alphabetical order</sup>
+
+- [Afonso Tsukamoto](https://github.com/AfonsoTsukamoto)
+- [Łukasz Korecki](https://github.com/lukaszkorecki)
+- [Marketa Adamova](https://github.com/MarketaAdamova)
