@@ -1,8 +1,8 @@
 # omega-red
 
-<img  src="https://vignette.wikia.nocookie.net/villains/images/7/71/Omega_Red_%28Marvel%29.jpg/revision/latest?cb=20120525195247" heighth="400px" align=right >
+<img  src="https://uncannyxmen.net/sites/default/files/images/characters/omegared/omegared00.jpg" heighth="400px" align=right >
 
-## A Redis component, based on Carmine
+## A Redis component, based on [Carmine](https://github.com/ptaoussanis/carmine)
 
 A simple Redis client wrapping [Carmine](https://github.com/ptaoussanis/carmine)
 It's not meant to be a fancy DSL or an ORM. Just helps with componentizing the connection
