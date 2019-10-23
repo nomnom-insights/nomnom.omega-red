@@ -1,5 +1,9 @@
 # omega-red
 
+[![CircleCI](https://circleci.com/gh/nomnom-insights/nomnom.omega-red.svg?style=svg)](https://circleci.com/gh/nomnom-insights/nomnom.omega-red)
+
+[![Clojars Project](https://img.shields.io/clojars/v/nomnom/omega-red.svg)](https://clojars.org/nomnom/omega-red)
+
 <img  src="https://uncannyxmen.net/sites/default/files/images/characters/omegared/omegared00.jpg" heighth="400px" align=right >
 
 ## A Redis component, based on [Carmine](https://github.com/ptaoussanis/carmine)
