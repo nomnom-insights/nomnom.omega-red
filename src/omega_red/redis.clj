@@ -3,8 +3,10 @@
   so we can use it when using Carmine, unlike the
   regular `wcar*` macro, recommended in Carmine docs."
   (:require [taoensso.carmine :as carmine]
+            [taoensso.carmine.connections  :as connection]
             [omega-red.protocol :as proto]
-            [com.stuartsierra.component :as component]))
+            [com.stuartsierra.component :as component])
+  (:import (java.io Closeable)))
 
 (defn get-redis-fn*
   "Finds actual function instance, based on a keyword.
@@ -12,21 +14,23 @@
   :hset -> taoensso.carmine/hset
   which then can be used as normal function"
   [fn-name-keyword]
-  (ns-resolve 'taoensso.carmine (symbol fn-name-keyword)))
+  (time (ns-resolve 'taoensso.carmine (symbol fn-name-keyword))))
 
 (def get-redis-fn (memoize get-redis-fn*))
 
-(defrecord Redis [pool spec conn]
+(defrecord Redis [pool spec]
   component/Lifecycle
   (start [this]
-    (assoc this :conn {:pool pool :spec spec}))
+    (let [pool (connection/conn-pool :mem/fresh {})]
+      (assoc this :pool pool)))
   (stop [this]
-    (assoc this :conn nil))
+    (.close ^Closeable pool)
+    (assoc this :pool nil :spec nil))
   proto/Redis
-  (execute* [this redis-fn args]
-    (carmine/wcar conn (apply (get-redis-fn redis-fn) args)))
-  (execute-pipeline* [this redis-fns+args]
-    (carmine/wcar conn
+  (execute* [_this redis-fn args]
+    (carmine/wcar {:pool pool :spec spec} (apply (get-redis-fn redis-fn) args)))
+  (execute-pipeline* [_this redis-fns+args]
+    (carmine/wcar {:pool pool :spec spec}
                   :as-pipeline
                   (mapv (fn [cmd+args]
                           (let [redis-fn (get-redis-fn (first cmd+args))]
@@ -36,4 +40,4 @@
 (defn create [{:keys [host port]}]
   {:pre [(string? host)
          (number? port)]}
-  (->Redis {} {:host host :port port} nil))
+  (map->Redis {:spec  {:host host :port port}}))
