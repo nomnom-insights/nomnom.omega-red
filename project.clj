@@ -10,7 +10,8 @@
                                    :password :env/clojars_password}}
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [com.stuartsierra/component "1.0.0"]
-                 [com.taoensso/carmine "2.19.1"]]
+                 [com.taoensso/carmine "3.0.0"]]
   :plugins [[lein-cloverage "1.0.13" :exclusions [org.clojure/clojure]]]
+  :globals {*warn-on-reflection* true}
   :profiles {:dev
              {:dependencies  [[org.clojure/tools.logging "1.1.0"]]}})
