@@ -8,9 +8,9 @@
   :deploy-repositories {"clojars" {:sign-releases false
                                    :username [:gpg :env/clojars_username]
                                    :password [:gpg :env/clojars_password]}}
-  :dependencies [[org.clojure/clojure "1.10.0"]
-                 [com.stuartsierra/component "0.4.0"]
-                 [com.taoensso/carmine "2.19.1"]]
+  :dependencies [[org.clojure/clojure "1.10.2"]
+                 [com.stuartsierra/component "1.0.0"]
+                 [com.taoensso/carmine "3.1.0"]]
   :plugins [[lein-cloverage "1.0.13" :exclusions [org.clojure/clojure]]]
   :profiles {:dev
-             {:dependencies  [[org.clojure/tools.logging "0.5.0-alpha.1"]]}})
+             {:dependencies  [[org.clojure/tools.logging "1.1.0"]]}})
