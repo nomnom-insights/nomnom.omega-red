@@ -2,9 +2,11 @@
   "Represents a redis connection spec,
   so we can use it when using Carmine, unlike the
   regular `wcar*` macro, recommended in Carmine docs."
-  (:require [taoensso.carmine :as carmine]
-            [omega-red.protocol :as proto]
-            [com.stuartsierra.component :as component]))
+  (:require
+    [com.stuartsierra.component :as component]
+    [omega-red.protocol :as proto]
+    [taoensso.carmine :as carmine]))
+
 
 (defn get-redis-fn*
   "Finds actual function instance, based on a keyword.
@@ -14,7 +16,23 @@
   [fn-name-keyword]
   (ns-resolve 'taoensso.carmine (symbol fn-name-keyword)))
 
+
 (def get-redis-fn (memoize get-redis-fn*))
+
+
+(defn execute* [conn redis-fn+args]
+  (let [[redis-fn & args] redis-fn+args]
+    (carmine/wcar conn (apply (get-redis-fn redis-fn) args))))
+
+
+(defn execute-pipeline* [conn redis-fns+args]
+  (carmine/wcar conn
+                :as-pipeline
+                (mapv (fn [cmd+args]
+                        (let [redis-fn (get-redis-fn (first cmd+args))]
+                          (apply redis-fn (rest cmd+args))))
+                      redis-fns+args)))
+
 
 (defrecord Redis [pool spec conn]
   component/Lifecycle
@@ -23,15 +41,11 @@
   (stop [this]
     (assoc this :conn nil))
   proto/Redis
-  (execute* [this redis-fn args]
-    (carmine/wcar conn (apply (get-redis-fn redis-fn) args)))
-  (execute-pipeline* [this redis-fns+args]
-    (carmine/wcar conn
-                  :as-pipeline
-                  (mapv (fn [cmd+args]
-                          (let [redis-fn (get-redis-fn (first cmd+args))]
-                            (apply redis-fn (rest cmd+args))))
-                        redis-fns+args))))
+  (execute [this redis-fn+args]
+    (execute* conn redis-fn+args))
+  (execute-pipeline [this redis-fns+args]
+    (execute-pipeline* conn redis-fns+args)))
+
 
 (defn create [{:keys [host port]}]
   {:pre [(string? host)
