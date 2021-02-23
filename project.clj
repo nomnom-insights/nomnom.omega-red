@@ -1,4 +1,4 @@
-(defproject nomnom/omega-red "1.0.0-SNAPSHOT"
+(defproject nomnom/omega-red "1.0.0"
   :description "Component firendly Redis client, based on Carmine"
   :url "https://github.com/nomnom-insights/nomnom.omega-red"
   :license {:name "MIT License"
