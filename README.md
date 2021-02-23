@@ -17,10 +17,10 @@ and invoking Redis commands in more idiomatic way, without using macros, like th
 
 The idea is that the component wraps the conection, and you pass "raw" Redis commands, like in the Redis shell or CLI, rather than invoking Carmine command functions + their arguments. The way it works is that  we convert the first keyword (command) to a Carmine function, cache it and then invoke it. The lookup/conversion is cached for later so that we don't pay the cost of the lookup too often.
 
-If you want to mock the component - you'll need something that implements the following:
+If you want to mock the component - you'll need something that implements the following protocol (defined as  `omega-red.protocol.Redis`):
 
 - `(execute this [:command + args])` - for  single commands
-- `(exececute-pipeline this [ [:command1  & args] [:command2 & args]...])` - for pipeline operations
+- `(exececute-pipeline this [ [:command1 + args] [:command2 + args]...])` - for pipeline operations
 
 and fakes Redis behavior as needed.
 
@@ -33,18 +33,18 @@ and fakes Redis behavior as needed.
             [omega-red.redis]
             [com.stuartsierra.component :as component]))
 
-(let [red (componet/start (omega-red.redis/create {:host "127.0.0.1" :port 6379}))]
-    (println (= 0 (proto/execute red [:exists "test.some.key"]))) ; true
-    (println (= "OK" (proto/execute red [:set "test.some.key" "foo"]))) ; true
-    (println (= 1 (proto/execute red [:exists "test.some.key"]))) ; true
-    (println (= "foo" (proto/execute red [:get "test.some.key"]))) ; true
-    (println (= 1 (proto/execute red [:del "test.some.key"]))) ; true
+(let [redis-conn (componet/start (omega-red.redis/create {:host "127.0.0.1" :port 6379}))]
+    (is (= 0 (proto/execute redis-conn [:exists "test.some.key"]))) ; true
+    (is (= "OK" (proto/execute redis-conn [:set "test.some.key" "foo"]))) ; true
+    (is (= 1 (proto/execute redis-conn [:exists "test.some.key"]))) ; true
+    (is (= "foo" (proto/execute redis-conn [:get "test.some.key"]))) ; true
+    (is (= 1 (proto/execute redis-conn [:del "test.some.key"]))) ; true
     (component/stop red)
-    (println (nil? (proto/execute red [:get "test.some.key"])))) ; true
+    (is (nil? (proto/execute redis-conn [:get "test.some.key"])))) ; true
 
 ;; pipeline execution
-(println (= [nil "OK" "oh ok" 1]
-       (proto/execute-pipeline red
+(is (= [nil "OK" "oh ok" 1]
+       (proto/execute-pipeline redis-conn
                                [[:get "test.some.key.pipe"]
                                 [:set "test.some.key.pipe" "oh ok"]
                                 [:get "test.some.key.pipe"]
@@ -55,7 +55,7 @@ and fakes Redis behavior as needed.
 ## Change log
 
 
-- 1.0.0-SNAPSHOT - **Breaking change!** Changes signature of `execute` to accept a vector, similar to `execute-pipeline`. This makes it easier to work with variadic Redis commands (`hmset` etc)
+- 1.0.0-SNAPSHOT - **Breaking change!** Changes signature of `execute` to accept a vector, and `execute-pipeline` to accept a vector of vectors. This makes it easier to work with variadic Redis commands (`hmset` etc) and compose commands
 - 0.1.0- 2019/10/23 - Initial Public Offering
 
 # Roadmap
