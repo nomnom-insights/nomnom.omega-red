@@ -19,8 +19,8 @@ The idea is that the component wraps the conection, and you pass "raw" Redis com
 
 If you want to mock the component - you'll need something that implements the following:
 
-- `(execute* this <command> & args)` - for  single commands
-- `(exececute-pipeline* this [ [command1  & args] [command2 & args]...])` - for pipeline
+- `(execute this [:command + args])` - for  single commands
+- `(exececute-pipeline this [ [:command1  & args] [:command2 & args]...])` - for pipeline operations
 
 and fakes Redis behavior as needed.
 
@@ -34,27 +34,35 @@ and fakes Redis behavior as needed.
             [com.stuartsierra.component :as component]))
 
 (let [red (componet/start (omega-red.redis/create {:host "127.0.0.1" :port 6379}))]
-    (println (= 0 (proto/execute red :exists "test.some.key"))) ; true
-    (println (= "OK" (proto/execute red :set "test.some.key" "foo"))) ; true
-    (println (= 1 (proto/execute red :exists "test.some.key"))) ; true
-    (println (= "foo" (proto/execute red :get "test.some.key"))) ; true
-    (println (= 1 (proto/execute red :del "test.some.key"))) ; true
+    (println (= 0 (proto/execute red [:exists "test.some.key"]))) ; true
+    (println (= "OK" (proto/execute red [:set "test.some.key" "foo"]))) ; true
+    (println (= 1 (proto/execute red [:exists "test.some.key"]))) ; true
+    (println (= "foo" (proto/execute red [:get "test.some.key"]))) ; true
+    (println (= 1 (proto/execute red [:del "test.some.key"]))) ; true
     (component/stop red)
-    (println (nil? (proto/execute red :get "test.some.key")))) ; true
+    (println (nil? (proto/execute red [:get "test.some.key"])))) ; true
 
 ;; pipeline execution
 (println (= [nil "OK" "oh ok" 1]
        (proto/execute-pipeline red
-                               [:get "test.some.key.pipe"]
-                               [:set "test.some.key.pipe" "oh ok"]
-                               [:get "test.some.key.pipe"]
-                               [:del "test.some.key.pipe"]))) ; true
+                               [[:get "test.some.key.pipe"]
+                                [:set "test.some.key.pipe" "oh ok"]
+                                [:get "test.some.key.pipe"]
+                                [:del "test.some.key.pipe"]]))) ; true
 
 ```
 
+## Change log
+
+
+- 1.0.0-SNAPSHOT - **Breaking change!** Changes signature of `execute` to accept a vector, similar to `execute-pipeline`. This makes it easier to work with variadic Redis commands (`hmset` etc)
+- 0.1.0- 2019/10/23 - Initial Public Offering
+
 # Roadmap
 
-Nothing at the moment. It's possible to create Components for Carmine's various exentions (message queue, Tundra) but they're not needed at the moment.
+- [ ] explicit connection pool component with its own lifecycle
+- [ ] *maybe* move off Carmine and use Jedis or Lettuce directly (because of the point above)
+
 
 # Authors
 
