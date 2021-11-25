@@ -3,7 +3,9 @@
     [clojure.test :refer [deftest is]]
     [omega-red.protocol :as proto]
     [omega-red.redis])
-  (:import [omega_red.redis Redis]))
+  (:import
+    (omega_red.redis
+      Redis)))
 
 
 (def redis-config

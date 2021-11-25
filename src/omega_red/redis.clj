@@ -20,12 +20,14 @@
 (def get-redis-fn (memoize get-redis-fn*))
 
 
-(defn execute* [conn redis-fn+args]
+(defn execute*
+  [conn redis-fn+args]
   (let [[redis-fn & args] redis-fn+args]
     (carmine/wcar conn (apply (get-redis-fn redis-fn) args))))
 
 
-(defn execute-pipeline* [conn redis-fns+args]
+(defn execute-pipeline*
+  [conn redis-fns+args]
   (carmine/wcar conn
                 :as-pipeline
                 (mapv (fn [cmd+args]
@@ -34,20 +36,35 @@
                       redis-fns+args)))
 
 
-(defrecord Redis [pool spec conn]
+(defrecord Redis
+  [pool spec conn]
+
   component/Lifecycle
-  (start [this]
+
+  (start
+    [this]
     (assoc this :conn {:pool pool :spec spec}))
-  (stop [this]
+
+
+  (stop
+    [this]
     (assoc this :conn nil))
+
+
   proto/Redis
-  (execute [_ redis-fn+args]
+
+  (execute
+    [_ redis-fn+args]
     (execute* conn redis-fn+args))
-  (execute-pipeline [_ redis-fns+args]
+
+
+  (execute-pipeline
+    [_ redis-fns+args]
     (execute-pipeline* conn redis-fns+args)))
 
 
-(defn create [{:keys [host port]}]
+(defn create
+  [{:keys [host port]}]
   {:pre [(string? host)
          (number? port)]}
   (->Redis {} {:host host :port port} nil))
