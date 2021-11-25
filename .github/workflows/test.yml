@@ -13,15 +13,15 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - "latest"
-          - "6"
-          - "5"
+          - latest
+          - 6
+          - 5
 
     runs-on: ubuntu-latest
     container:
       image: clojure:openjdk-11-lein-2.9.6
     services:
-      rabbitmq:
+      redis:
         image: redis:${{ matrix.version }}
         ports:
           - 6379:6379
@@ -49,3 +49,6 @@ jobs:
     - name: Run tests
       id: tests
       run: lein test 2>&1
+      env:
+        REDIS_URL: redis
+        REDIS_PORT: 6379

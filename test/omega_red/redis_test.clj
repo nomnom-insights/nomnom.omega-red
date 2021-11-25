@@ -6,8 +6,13 @@
   (:import [omega_red.redis Redis]))
 
 
+(def redis-config
+  {:host (or (System/getenv "REDIS_URL") "127.0.0.1")
+   :port (Integer/parseInt (or (System/getenv "REDIS_PORT") "6379"))})
+
+
 (deftest redis-ops
-  (let [red (.start ^Redis (omega-red.redis/create {:host "127.0.0.1" :port 6379}))]
+  (let [red (.start ^Redis (omega-red.redis/create redis-config))]
     (is (= 0 (proto/execute red [:exists "test.some.key"])))
     (is (= "OK" (proto/execute red [:set "test.some.key" "foo"])))
     (is (= 1 (proto/execute red [:exists "test.some.key"])))
@@ -18,7 +23,7 @@
 
 
 (deftest redis-pipelne
-  (let [red (.start ^Redis (omega-red.redis/create {:host "127.0.0.1" :port 6379}))]
+  (let [red (.start ^Redis (omega-red.redis/create redis-config))]
     (is (= 0 (proto/execute red [:exists "test.some.key.pipe"])))
     (is (= [nil "OK" "oh ok" 1]
            (proto/execute-pipeline red
