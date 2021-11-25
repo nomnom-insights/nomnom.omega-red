@@ -46,7 +46,7 @@ jobs:
     - name: Install dependencies
       run: lein deps
 
-    - name: Run tests for ${ matrix.version }
+    - name: Run omega-red tests for ${{ matrix.version }}
       id: tests
       run: lein test 2>&1
       env:
