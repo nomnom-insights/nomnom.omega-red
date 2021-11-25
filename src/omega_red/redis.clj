@@ -41,9 +41,9 @@
   (stop [this]
     (assoc this :conn nil))
   proto/Redis
-  (execute [this redis-fn+args]
+  (execute [_ redis-fn+args]
     (execute* conn redis-fn+args))
-  (execute-pipeline [this redis-fns+args]
+  (execute-pipeline [_ redis-fns+args]
     (execute-pipeline* conn redis-fns+args)))
 
 
