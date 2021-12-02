@@ -54,7 +54,7 @@ and fakes Redis behavior as needed.
 
 ## Change log
 
-
+- 1.0.1 - Dependency update
 - 1.0.0-SNAPSHOT - **Breaking change!** Changes signature of `execute` to accept a vector, and `execute-pipeline` to accept a vector of vectors. This makes it easier to work with variadic Redis commands (`hmset` etc) and compose commands
 - 0.1.0- 2019/10/23 - Initial Public Offering
 
