@@ -28,6 +28,7 @@
                       (reset! state 0)
                       (reset! sys (component/start (component/map->SystemMap system)))
                       (redis/execute (:redis @sys) [:del "testing:1"])
+                      (redis/execute (:redis @sys) [:del "testing:2"])
                       (test)
                       (swap! sys component/stop)))
 
@@ -48,4 +49,20 @@
       (testing "cache invalidation scenario"
         (redis/execute (:redis @sys) [:del "testing:1"])
         (is (= 4 (get-or-fetch)))
-        (is (= 5 (stateful)))))))
+        (is (= 5 (stateful))))))
+
+  (testing "different data types"
+    (let [get-or-fetch #(redis/cache-get-or-fetch (:redis @sys) {:fetch (fn [] (str (stateful)))
+                                                                 :cache-get (fn cache-get' [r]
+                                                                              (redis/execute r [:hget "testing:2" "foo"]))
+                                                                 :cache-set (fn cache-set' [r cache-result]
+                                                                              (redis/execute r [:hset "testing:2" "foo" cache-result]))})]
+
+      ;; increments again because we're checking a different cache key!
+      (is (= "6" (get-or-fetch)))
+      (is (= "6" (get-or-fetch)))
+      (is (= 7 (stateful)))
+      (is (= "6" (get-or-fetch)))
+
+      (redis/execute (:redis @sys) [:del "testing:2"])
+      (is (= "8" (get-or-fetch))))))
