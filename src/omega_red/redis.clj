@@ -22,12 +22,14 @@
 
 (defn execute*
   [conn redis-fn+args]
+  {:pre [(seq redis-fn+args)]}
   (let [[redis-fn & args] redis-fn+args]
     (carmine/wcar conn (apply (get-redis-fn redis-fn) args))))
 
 
 (defn execute-pipeline*
   [conn redis-fns+args]
+  {:pre [(seq redis-fns+args)]}
   (carmine/wcar conn
                 :as-pipeline
                 (mapv (fn [cmd+args]
@@ -37,6 +39,9 @@
 
 
 (defn cache-get-or-fetch* [redis {:keys [fetch cache-set cache-get]}]
+  {:pre [(fn? fetch)
+         (fn? cache-set)
+         (fn? cache-get)]}
   (if-let [from-cache (cache-get redis)]
     from-cache
     (let [fetch-res (fetch)]
@@ -49,6 +54,8 @@
   component/Lifecycle
   (start
     [this]
+    ;; XXX: figure out how to use a proper connection pool in Carmine, see:
+    ;; https://github.com/ptaoussanis/carmine/issues/224
     (assoc this :conn {:pool pool :spec spec}))
   (stop
     [this]

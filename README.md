@@ -25,35 +25,60 @@ If you want to mock the component - you'll need something that implements the fo
 and fakes Redis behavior as needed.
 
 
+##### Cache helper
+
+Omega Red also supports a very simple "fetch from cache or populate on miss" workflow - it's not complicated but nicely DRYs up your code.
+See example below
+
+
 # Example
 
 ```clojure
 (ns omega-red.redis-test
-  (:require [omega-red.protocol :as proto]
+  (:require [omega-red.protocol :as redis]
             [omega-red.redis]
             [com.stuartsierra.component :as component]))
 
-(let [redis-conn (componet/start (omega-red.redis/create {:host "127.0.0.1" :port 6379}))]
-    (is (= 0 (proto/execute redis-conn [:exists "test.some.key"]))) ; true
-    (is (= "OK" (proto/execute redis-conn [:set "test.some.key" "foo"]))) ; true
-    (is (= 1 (proto/execute redis-conn [:exists "test.some.key"]))) ; true
-    (is (= "foo" (proto/execute redis-conn [:get "test.some.key"]))) ; true
-    (is (= 1 (proto/execute redis-conn [:del "test.some.key"]))) ; true
+(let [conn (componet/start (omega-red.redis/create {:host "127.0.0.1" :port 6379}))]
+    (is (= 0 (redis/execute conn [:exists "test.some.key"]))) ; true
+    (is (= "OK" (redis/execute conn [:set "test.some.key" "foo"]))) ; true
+    (is (= 1 (redis/execute conn [:exists "test.some.key"]))) ; true
+    (is (= "foo" (redis/execute conn [:get "test.some.key"]))) ; true
+    (is (= 1 (redis/execute conn [:del "test.some.key"]))) ; true
     (component/stop red)
-    (is (nil? (proto/execute redis-conn [:get "test.some.key"])))) ; true
+    (is (nil? (redis/execute conn [:get "test.some.key"])))) ; true
 
 ;; pipeline execution
 (is (= [nil "OK" "oh ok" 1]
-       (proto/execute-pipeline redis-conn
+       (redis/execute-pipeline conn
                                [[:get "test.some.key.pipe"]
                                 [:set "test.some.key.pipe" "oh ok"]
                                 [:get "test.some.key.pipe"]
                                 [:del "test.some.key.pipe"]]))) ; true
 
+
+;; caching example
+(let [fetch! (fn []
+               (redis/cache-get-or-fetch conn {:fetch (fn [] (slurp "http://example.com"))
+                                               :cache-set (fn [conn fetch-res]
+                                                            (redis/execute conn [:setex "example" 10 fetch-res]))
+                                               :cache-get (fn [conn]
+                                                            (redis/exeucte conn [:get "example"]))}))]
+
+   (fetch!) ;; => returns contents of http://example.com as a result of direct call
+   (fetch!) ;; => pulls from cache
+   (fetch!) ;; => pulls from cache
+   (Thread/sleep (* 10 1000))
+   (fetch!) ;; => makes http request again
+   )
 ```
+
+
+
 
 ## Change log
 
+- 1.1.0-SNAPSHOT-0 - **UNPUBLISHED** - clean up and cache helper
 - 1.0.2 - Dependency update
 - 1.0.0-SNAPSHOT - **Breaking change!** Changes signature of `execute` to accept a vector, and `execute-pipeline` to accept a vector of vectors. This makes it easier to work with variadic Redis commands (`hmset` etc) and compose commands
 - 0.1.0- 2019/10/23 - Initial Public Offering
