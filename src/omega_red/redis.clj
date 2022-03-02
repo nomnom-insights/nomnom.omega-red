@@ -36,31 +36,35 @@
                       redis-fns+args)))
 
 
+(defn cache-get-or-fetch* [redis {:keys [fetch cache-set cache-get]}]
+  (if-let [from-cache (cache-get redis)]
+    from-cache
+    (let [fetch-res (fetch)]
+      (cache-set redis fetch-res)
+      fetch-res)))
+
+
 (defrecord Redis
   [pool spec conn]
-
   component/Lifecycle
-
   (start
     [this]
     (assoc this :conn {:pool pool :spec spec}))
-
-
   (stop
     [this]
     (assoc this :conn nil))
-
-
   proto/Redis
-
   (execute
     [_ redis-fn+args]
     (execute* conn redis-fn+args))
-
-
   (execute-pipeline
     [_ redis-fns+args]
-    (execute-pipeline* conn redis-fns+args)))
+    (execute-pipeline* conn redis-fns+args))
+  proto/Caching
+  (cache-get-or-fetch [this {:keys [fetch cache-set cache-get]}]
+    (cache-get-or-fetch* this {:fetch fetch
+                               :cache-set cache-set
+                               :cache-get cache-get})))
 
 
 (defn create

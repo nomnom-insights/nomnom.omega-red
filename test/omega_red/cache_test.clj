@@ -2,7 +2,6 @@
   (:require
     [clojure.test :refer [deftest testing is use-fixtures]]
     [com.stuartsierra.component  :as component]
-    [omega-red.cache :as cache]
     [omega-red.protocol :as redis]
     [omega-red.redis]))
 
@@ -13,10 +12,7 @@
 
 
 (def system
-  {:redis (omega-red.redis/create redis-config)
-   :cache (component/using
-            (cache/create)
-            [:redis])})
+  {:redis (omega-red.redis/create redis-config)})
 
 
 (def state (atom 0))
@@ -38,26 +34,18 @@
 
 (deftest cache-test
   (testing "caches result of fetch call"
-    (is (= 1 (cache/fetch-and-set (:cache @sys) {:fetch stateful
-                                                 :cache-get [:get "testing:1"]
-                                                 :cache-set (fn [cache-result]
-                                                              [:set "testing:1" cache-result])})))
-    (is (= 2 (stateful)))
-    (is (= 3 (stateful)))
-    ;; hmmmmm, this is not helpful
-    (is (= "1" (cache/fetch-and-set (:cache @sys) {:fetch stateful
-                                                   :cache-get [:get "testing:1"]
-                                                   :cache-set (fn [cache-result]
-                                                                [:set "testing:1" cache-result])}))))
-  (testing "cache invalidation scenario"
-    (redis/execute (:redis @sys) [:del "testing:1"])
-    (is (= 4 (cache/fetch-and-set (:cache @sys) {:fetch stateful
-                                                 :cache-get [:get "testing:1"]
-                                                 :cache-set (fn [cache-result]
-                                                              [:set "testing:1" cache-result])})))
-    (is (= 5 (stateful))))
-  (testing "cache get can be a function"
-    (is (= "4" (cache/fetch-and-set (:cache @sys) {:fetch stateful
-                                                   :cache-get (fn [] [:get "testing:1"])
-                                                   :cache-set (fn [cache-result]
-                                                                [:set "testing:1" cache-result])})))))
+    (let [get-or-fetch #(redis/cache-get-or-fetch (:redis @sys) {:fetch stateful
+                                                                 :cache-get (fn cache-get' [r]
+                                                                              (when-let [v (redis/execute r [:get "testing:1"])]
+                                                                                (Long/parseLong v)))
+                                                                 :cache-set (fn cache-set' [r cache-result]
+                                                                              (redis/execute r [:set "testing:1" cache-result]))})]
+      (is (= 1 (get-or-fetch)))
+      (is (= 2 (stateful)))
+      (is (= 3 (stateful)))
+
+      (is (= 1 (get-or-fetch)))
+      (testing "cache invalidation scenario"
+        (redis/execute (:redis @sys) [:del "testing:1"])
+        (is (= 4 (get-or-fetch)))
+        (is (= 5 (stateful)))))))
