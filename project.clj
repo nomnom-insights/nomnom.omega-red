@@ -5,9 +5,16 @@
             :url "https://opensource.org/licenses/MIT"
             :year 2018
             :key "mit"}
-  :deploy-repositories {"clojars" {:sign-releases false
-                                   :username :env/clojars_username
-                                   :password  :env/clojars_password}}
+
+  :deploy-repositories [["releases"  {:sign-releases false
+                                      :url "https://clojars.org"
+                                      :username :env/clojars_username
+                                      :password :env/clojars_token}]
+                        ["snapshots" {:sign-releases false
+                                      :url "https://clojars.org"
+                                      :username :env/clojars_username
+                                      :password :env/clojars_token}]]
+
   :dependencies [[org.clojure/clojure "1.10.3"]
                  [com.stuartsierra/component "1.1.0"]
                  [com.taoensso/carmine "3.1.0"]]
