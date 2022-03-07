@@ -35,34 +35,30 @@
 
 (deftest cache-test
   (testing "caches result of fetch call"
-    (let [get-or-fetch #(redis/cache-get-or-fetch (:redis @sys) {:fetch stateful
-                                                                 :cache-get (fn cache-get' [r]
-                                                                              (when-let [v (redis/execute r [:get "testing:1"])]
-                                                                                (Long/parseLong v)))
-                                                                 :cache-set (fn cache-set' [r cache-result]
-                                                                              (redis/execute r [:set "testing:1" cache-result]))})]
+    (let [get-or-fetch #(redis/cache-get-or-fetch {:fetch stateful
+                                                   :cache-get (fn cache-get' []
+                                                                (when-let [v (redis/execute (:redis @sys) [:get "testing:1"])]
+                                                                  (Long/parseLong v)))
+                                                   :cache-set (fn cache-set' [cache-result]
+                                                                (redis/execute  (:redis @sys) [:set "testing:1" cache-result]))})]
       (is (= 1 (get-or-fetch)))
       (is (= 2 (stateful)))
       (is (= 3 (stateful)))
-
       (is (= 1 (get-or-fetch)))
       (testing "cache invalidation scenario"
         (redis/execute (:redis @sys) [:del "testing:1"])
         (is (= 4 (get-or-fetch)))
         (is (= 5 (stateful))))))
-
   (testing "different data types"
-    (let [get-or-fetch #(redis/cache-get-or-fetch (:redis @sys) {:fetch (fn [] (str (stateful)))
-                                                                 :cache-get (fn cache-get' [r]
-                                                                              (redis/execute r [:hget "testing:2" "foo"]))
-                                                                 :cache-set (fn cache-set' [r cache-result]
-                                                                              (redis/execute r [:hset "testing:2" "foo" cache-result]))})]
-
+    (let [get-or-fetch #(redis/cache-get-or-fetch {:fetch (fn [] (str (stateful)))
+                                                   :cache-get (fn cache-get' []
+                                                                (redis/execute  (:redis @sys) [:hget "testing:2" "foo"]))
+                                                   :cache-set (fn cache-set' [cache-result]
+                                                                (redis/execute  (:redis @sys) [:hset "testing:2" "foo" cache-result]))})]
       ;; increments again because we're checking a different cache key!
       (is (= "6" (get-or-fetch)))
       (is (= "6" (get-or-fetch)))
       (is (= 7 (stateful)))
       (is (= "6" (get-or-fetch)))
-
       (redis/execute (:redis @sys) [:del "testing:2"])
       (is (= "8" (get-or-fetch))))))

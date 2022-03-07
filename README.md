@@ -59,10 +59,10 @@ See example below
 
 ;; caching example
 (let [fetch! (fn []
-               (redis/cache-get-or-fetch conn {:fetch (fn [] (slurp "http://example.com"))
-                                               :cache-set (fn [conn fetch-res]
+               (redis/cache-get-or-fetch {:fetch (fn [] (slurp "http://example.com"))
+                                               :cache-set (fn [fetch-res]
                                                             (redis/execute conn [:setex "example" 10 fetch-res]))
-                                               :cache-get (fn [conn]
+                                               :cache-get (fn []
                                                             (redis/exeucte conn [:get "example"]))}))]
 
    (fetch!) ;; => returns contents of http://example.com as a result of direct call
