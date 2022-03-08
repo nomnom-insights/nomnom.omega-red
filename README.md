@@ -60,17 +60,16 @@ See example below
 ;; caching example
 (let [fetch! (fn []
                (redis/cache-get-or-fetch {:fetch (fn [] (slurp "http://example.com"))
-                                               :cache-set (fn [fetch-res]
-                                                            (redis/execute conn [:setex "example" 10 fetch-res]))
-                                               :cache-get (fn []
-                                                            (redis/exeucte conn [:get "example"]))}))]
+                                          :cache-set (fn [fetch-res]
+                                                       (redis/execute conn [:setex "example" 10 fetch-res]))
+                                          :cache-get (fn []
+                                                       (redis/exeucte conn [:get "example"]))}))]
 
    (fetch!) ;; => returns contents of http://example.com as a result of direct call
    (fetch!) ;; => pulls from cache
    (fetch!) ;; => pulls from cache
    (Thread/sleep (* 10 1000))
-   (fetch!) ;; => makes http request again
-   )
+   (fetch!)) ;; => makes http request again
 ```
 
 
@@ -78,7 +77,7 @@ See example below
 
 ## Change log
 
-- 1.1.0-SNAPSHOT-0 - **UNPUBLISHED** - clean up and cache helper
+- 1.1.0 - Clean up and cache helper
 - 1.0.2 - Dependency update
 - 1.0.0-SNAPSHOT - **Breaking change!** Changes signature of `execute` to accept a vector, and `execute-pipeline` to accept a vector of vectors. This makes it easier to work with variadic Redis commands (`hmset` etc) and compose commands
 - 0.1.0- 2019/10/23 - Initial Public Offering
