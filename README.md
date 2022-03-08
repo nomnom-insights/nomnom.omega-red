@@ -1,6 +1,5 @@
 # omega-red
 
-[![CircleCI](https://circleci.com/gh/nomnom-insights/nomnom.omega-red.svg?style=svg)](https://circleci.com/gh/nomnom-insights/nomnom.omega-red)
 
 [![Clojars Project](https://img.shields.io/clojars/v/nomnom/omega-red.svg)](https://clojars.org/nomnom/omega-red)
 
