@@ -17,7 +17,10 @@
 
   :dependencies [[org.clojure/clojure "1.10.3"]
                  [com.stuartsierra/component "1.1.0"]
-                 [com.taoensso/carmine "3.1.0"]]
+                 [com.taoensso/carmine "3.1.0"]
+
+                 [redis.clients/jedis "4.1.1"]
+                 ]
   :global-vars {*warn-on-reflection* true}
   :profiles {:dev
              {:dependencies  [[org.clojure/tools.logging "1.2.4"]]}})
