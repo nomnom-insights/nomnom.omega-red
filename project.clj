@@ -1,4 +1,4 @@
-(defproject nomnom/omega-red "1.1.0"
+(defproject nomnom/omega-red "1.1.1-SNAPSHOT-0"
   :description "Component firendly Redis client, based on Carmine"
   :url "https://github.com/nomnom-insights/nomnom.omega-red"
   :license {:name "MIT License"
@@ -15,7 +15,7 @@
                                       :username :env/clojars_username
                                       :password :env/clojars_token}]]
 
-  :dependencies [[org.clojure/clojure "1.10.3"]
+  :dependencies [[org.clojure/clojure "1.11.1"]
                  [com.stuartsierra/component "1.1.0"]
                  [com.taoensso/carmine "3.1.0"]]
   :global-vars {*warn-on-reflection* true}

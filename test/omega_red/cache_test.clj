@@ -23,12 +23,12 @@
 (defn stateful []
   (swap! state inc))
 
-
 (use-fixtures :once (fn [test]
                       (reset! state 0)
                       (reset! sys (component/start (component/map->SystemMap system)))
                       (redis/execute (:redis @sys) [:del "testing:1"])
                       (redis/execute (:redis @sys) [:del "testing:2"])
+                      (redis/execute (:redis @sys) [:del "testing:bools"])
                       (test)
                       (swap! sys component/stop)))
 
@@ -61,4 +61,18 @@
       (is (= 7 (stateful)))
       (is (= "6" (get-or-fetch)))
       (redis/execute (:redis @sys) [:del "testing:2"])
-      (is (= "8" (get-or-fetch))))))
+      (is (= "8" (get-or-fetch)))))
+
+  (testing "handles false boolean content correctly"
+    (let [fetches (atom 0)
+          get-or-fetch #(redis/cache-get-or-fetch {:fetch (fn []
+                                                            (swap! fetches inc)
+                                                            false)
+                                                   :cache-get (fn cache-get' []
+                                                                (redis/execute (:redis @sys) [:get "testing:bools"]))
+                                                   :cache-set (fn cache-set' [cache-result]
+                                                                (redis/execute  (:redis @sys) [:set  "testing:bools" cache-result]))})]
+      (is (= (get-or-fetch) false))
+      (is (= (get-or-fetch) false))
+      (is (= (get-or-fetch) false))
+      (is (= 1 @fetches)))))

@@ -24,8 +24,9 @@
   {:pre [(fn? fetch)
          (fn? cache-set)
          (fn? cache-get)]}
-  (if-let [from-cache (cache-get)]
-    from-cache
-    (let [fetch-res (fetch)]
-      (cache-set fetch-res)
-      fetch-res)))
+  (let [from-cache (cache-get)]
+    (if (some? from-cache)
+      from-cache
+      (let [fetch-res (fetch)]
+        (cache-set fetch-res)
+        fetch-res))))
